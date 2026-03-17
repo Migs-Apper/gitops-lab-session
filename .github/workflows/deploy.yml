@@ -1,20 +1,32 @@
-# .github/workflows/deploy.yml
 name: GitOps Pipeline for Staging
 
+# This workflow runs on any push to the 'main' branch
 on:
   push:
     branches:
       - main
 
 jobs:
-  deploy:
+  deploy-to-staging:
+    # Use the latest version of Ubuntu for our runner
     runs-on: ubuntu-latest
-    steps:
-      - name: 1. Checkout repository code
-        uses: actions/checkout@v3
 
-      - name: 2. Deploy to Kubernetes Cluster
-        uses: arup-group/actions-had-a-kubectl@v1.1.1
+    steps:
+      # Step 1: Check out the repository code so the runner can access it
+      - name: Checkout Repository Code
+        uses: actions/checkout@v4
+
+      # Step 2: Deploy the manifest to the Kubernetes cluster
+      # This action securely sets up kubectl and applies the configuration
+      - name: Deploy to Kubernetes
+        uses: azure/k8s-deploy@v5
         with:
-          config: ${{ secrets.KUBECONFIG }}
-          kubectl: apply -f staging/nginx-deployment.yaml --namespace=staging
+          # The manifest file to deploy
+          manifests: |
+            staging/nginx-deployment.yaml
+
+          # The Kubernetes namespace to deploy to
+          namespace: 'staging'
+
+          # The secret containing your kubeconfig credentials
+          kubeconfig: ${{ secrets.KUBECONFIG }}
