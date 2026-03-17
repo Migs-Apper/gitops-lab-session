@@ -1,0 +1,20 @@
+# .github/workflows/deploy.yml
+name: GitOps Pipeline for Staging
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Checkout repository code
+        uses: actions/checkout@v3
+
+      - name: 2. Deploy to Kubernetes Cluster
+        uses: arup-group/actions-had-a-kubectl@v1.1.1
+        with:
+          config: ${{ secrets.KUBECONFIG }}
+          kubectl: apply -f staging/nginx-deployment.yaml --namespace=staging
