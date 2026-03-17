@@ -7,25 +7,16 @@ on:
 
 jobs:
   deploy-to-staging:
-    runs-on: ubuntu-latest
+    # This is the critical change.
+    # It tells GitHub to send this job to your local runner.
+    runs-on: self-hosted
+
     steps:
-      # First, checkout the repository code
       - name: Checkout Repository Code
         uses: actions/checkout@v4
 
-      # NEW STEP: This securely logs into your Kubernetes cluster
-      # It uses your secret and prepares kubectl for the next step
-      - name: Set Kubernetes context
-        uses: azure/k8s-set-context@v4
-        with:
-          method: kubeconfig
-          kubeconfig: ${{ secrets.KUBECONFIG }}
-
-      # CORRECTED STEP: This now runs *after* login is complete.
-      # Notice the 'kubeconfig:' line has been removed because it's not needed.
-      - name: Deploy to Kubernetes
-        uses: azure/k8s-deploy@v5
-        with:
-          namespace: 'staging'
-          manifests: |
-            staging/nginx-deployment.yaml
+      - name: Deploy to Minikube using Local Kubectl
+        run: |
+          # This command will be executed by the runner on your machine.
+          # It automatically uses the same kubeconfig your terminal uses.
+          kubectl apply -f staging/nginx-deployment.yaml --namespace=staging
